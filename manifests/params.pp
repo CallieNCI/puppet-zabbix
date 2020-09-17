@@ -32,6 +32,18 @@ class zabbix::params {
       $zabbix_package_provider  = undef
       $agent_loadmodulepath     = '/usr/lib/modules'
     }
+    'AIX': {
+      $manage_repo              = false
+      $zabbix_package_provider  = 'yum'
+      $zabbix_package_agent     = 'zabbix-agent'
+      $agent_configfile_path    = '/etc/zabbix/zabbix_agentd.conf'
+      $agent_config_owner       = 'zabbix'
+      $agent_zabbix_user        = 'zabbix'
+      $agent_config_group       = 'zabbix'
+      $agent_pidfile            = '/var/run/zabbix/zabbix_agentd.pid'
+      $agent_servicename        = 'zabbix-agent'
+    }
+
     'Archlinux': {
       $server_fpinglocation     = '/usr/bin/fping'
       $server_fping6location    = '/usr/bin/fping6'
@@ -314,11 +326,9 @@ class zabbix::params {
   $agent_userparameter                      = undef
   $agent_zabbix_alias                       = undef
   $agent_zbx_group                          = 'Linux servers'
-  $agent_zbx_groups                         = [ 'Linux servers', ]
+  $agent_zbx_groups                         = ['Linux servers',]
   $agent_zbx_group_create                   = true
-  $agent_zbx_templates                      = [
-    'Template OS Linux',
-    'Template App SSH Service']
+  $agent_zbx_templates                      = ['Template OS Linux', 'Template App SSH Service']
   $apache_status                            = false
   $monitored_by_proxy                       = undef
   # provided by camp2camp/systemd
@@ -425,7 +435,7 @@ class zabbix::params {
 
   # SE Linux specific params
   $selinux_require                          = ['type zabbix_agent_t', 'class process setrlimit', 'class unix_dgram_socket create']
-  $selinux_rules                            = { 'zabbix_agent_t' => ['allow zabbix_agent_t self:process setrlimit', 'allow zabbix_agent_t self:unix_dgram_socket create']}
+  $selinux_rules                            = { 'zabbix_agent_t' => ['allow zabbix_agent_t self:process setrlimit', 'allow zabbix_agent_t self:unix_dgram_socket create'] }
 
   $manage_selinux = fact('os.selinux.enabled') ? {
     true    => true,
