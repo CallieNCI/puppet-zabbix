@@ -132,7 +132,6 @@ class zabbix::database::postgresql (
       -> apt::ppa { 'ppa:timescale/timescaledb-ppa': }
       -> package {'timescaledb-1.7.4-postgresql-12':
         ensure  => 'latest',
-        require => Class['apt::update'],
       }
       -> postgresql::server::extension {'zabbix-timescaledb':
         database  => 'zabbix_server',
