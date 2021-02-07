@@ -129,6 +129,23 @@ class zabbix::database::postgresql (
         provider => 'shell',
         require  => Exec['update_pgpass'],
       }
+      -> apt::ppa { 'ppa:timescale/timescaledb-ppa': }
+      -> package {'timescaledb-1.7.4-postgresql-12':
+        ensure  => 'latest',
+        require => Class['apt::update'],
+      }
+      -> postgresql::server::extension {'zabbix-timescaledb':
+        database  => 'zabbix_server',
+        extension => 'timescaledb',
+        require   => Exec['zabbix_server_data.sql'],
+        before  => Service['zabbix-server'],
+      }
+      -> postgresql_psql {'initialise-timescaledb':
+        db      => 'zabbix_server',
+        command => "SELECT create_hypertable('history', 'clock', chunk_time_interval => 86400, migrate_data => true); SELECT create_hypertable('history_uint', 'clock', chunk_time_interval => 86400, migrate_data => true); SELECT create_hypertable('history_log', 'clock', chunk_time_interval => 86400, migrate_data => true); SELECT create_hypertable('history_text', 'clock', chunk_time_interval => 86400, migrate_data => true); SELECT create_hypertable('history_str', 'clock', chunk_time_interval => 86400, migrate_data => true); SELECT create_hypertable('trends', 'clock', chunk_time_interval => 2592000, migrate_data => true); SELECT create_hypertable('trends_uint', 'clock', chunk_time_interval => 2592000, migrate_data => true); UPDATE config SET db_extension='timescaledb',hk_history_global=1,hk_trends_global=1",
+        unless  => "SELECT 1 from _timescaledb_catalog.hypertable where table_name='history'",
+        before  => Service['zabbix-server'],
+      }
     }
     default: {
       fail 'We do not work.'
