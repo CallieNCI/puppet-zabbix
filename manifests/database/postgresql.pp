@@ -27,6 +27,7 @@ class zabbix::database::postgresql (
 ) inherits zabbix::params {
   assert_private()
 
+
   #
   # Adjustments for version 3.0/4.0 - structure of package with sqls differs from previous versions
   case $zabbix_version {
@@ -91,10 +92,20 @@ class zabbix::database::postgresql (
   }
 
   file { '/root/.pgpass':
-    ensure => file,
-    mode   => '0600',
-    owner  => 'root',
-    group  => 'root',
+    ensure  => file,
+    mode    => '0600',
+    owner   => 'root',
+    group   => 'root',
+  }
+
+  postgresql::server::extension {'zabbix-timescaledb':
+    database  => 'zabbix_server',
+    extension => 'timescaledb',
+    require => File['/root/.pgpass'],
+  }
+  -> postgresql_psql {'initialise-timescaledb':
+    db      => 'zabbix_server',
+    command => "SELECT create_hypertable('history', 'clock', chunk_time_interval => 86400, migrate_data => true); SELECT create_hypertable('history_uint', 'clock', chunk_time_interval => 86400, migrate_data => true); SELECT create_hypertable('history_log', 'clock', chunk_time_interval => 86400, migrate_data => true); SELECT create_hypertable('history_text', 'clock', chunk_time_interval => 86400, migrate_data => true); SELECT create_hypertable('history_str', 'clock', chunk_time_interval => 86400, migrate_data => true); SELECT create_hypertable('trends', 'clock', chunk_time_interval => 2592000, migrate_data => true); SELECT create_hypertable('trends_uint', 'clock', chunk_time_interval => 2592000, migrate_data => true); UPDATE config SET db_extension='timescaledb',hk_history_global=1,hk_trends_global=1",
   }
 
   case $zabbix_type {
@@ -104,7 +115,7 @@ class zabbix::database::postgresql (
         path     => "/bin:/usr/bin:/usr/local/sbin:/usr/local/bin:${database_path}",
         unless   => 'test -f /etc/zabbix/.schema.done',
         provider => 'shell',
-        require  => Exec['update_pgpass'],
+        require  => Postgresql_psql {'initialise-timescaledb'],
       }
     }
     'server': {
@@ -113,29 +124,21 @@ class zabbix::database::postgresql (
         path     => "/bin:/usr/bin:/usr/local/sbin:/usr/local/bin:${database_path}",
         unless   => 'test -f /etc/zabbix/.schema.done',
         provider => 'shell',
-        require  => Exec['update_pgpass'],
+        require  => Postgresql_psql {'initialise-timescaledb'],
       }
       -> exec { 'zabbix_server_images.sql':
         command  => $zabbix_server_images_sql,
         path     => "/bin:/usr/bin:/usr/local/sbin:/usr/local/bin:${database_path}",
         unless   => 'test -f /etc/zabbix/.images.done',
         provider => 'shell',
-        require  => Exec['update_pgpass'],
+        require  => Postgresql_psql {'initialise-timescaledb'],
       }
       -> exec { 'zabbix_server_data.sql':
         command  => $zabbix_server_data_sql,
         path     => "/bin:/usr/bin:/usr/local/sbin:/usr/local/bin:${database_path}",
         unless   => 'test -f /etc/zabbix/.data.done',
         provider => 'shell',
-        require  => Exec['update_pgpass'],
-      }
-      -> postgresql::server::extension {'zabbix-timescaledb':
-        database  => 'zabbix_server',
-        extension => 'timescaledb',
-      }
-      -> postgresql_psql {'initialise-timescaledb':
-        db      => 'zabbix_server',
-        command => "SELECT create_hypertable('history', 'clock', chunk_time_interval => 86400, migrate_data => true); SELECT create_hypertable('history_uint', 'clock', chunk_time_interval => 86400, migrate_data => true); SELECT create_hypertable('history_log', 'clock', chunk_time_interval => 86400, migrate_data => true); SELECT create_hypertable('history_text', 'clock', chunk_time_interval => 86400, migrate_data => true); SELECT create_hypertable('history_str', 'clock', chunk_time_interval => 86400, migrate_data => true); SELECT create_hypertable('trends', 'clock', chunk_time_interval => 2592000, migrate_data => true); SELECT create_hypertable('trends_uint', 'clock', chunk_time_interval => 2592000, migrate_data => true); UPDATE config SET db_extension='timescaledb',hk_history_global=1,hk_trends_global=1",
+        require  => Postgresql_psql {'initialise-timescaledb'],
       }
     }
     default: {
