@@ -84,18 +84,18 @@ class zabbix::database::postgresql (
     }
   }
 
-  exec { 'update_pgpass':
-    command => "echo ${database_host}:5432:${database_name}:${database_user}:${database_password} >> /root/.pgpass",
-    path    => "/bin:/usr/bin:/usr/local/sbin:/usr/local/bin:${database_path}",
-    unless  => "grep \"${database_host}:5432:${database_name}:${database_user}:${database_password}\" /root/.pgpass",
-    require => File['/root/.pgpass'],
-  }
-
   file { '/root/.pgpass':
     ensure  => file,
     mode    => '0600',
     owner   => 'root',
     group   => 'root',
+  }
+
+  exec { 'update_pgpass':
+    command => "echo ${database_host}:5432:${database_name}:${database_user}:${database_password} >> /root/.pgpass",
+    path    => "/bin:/usr/bin:/usr/local/sbin:/usr/local/bin:${database_path}",
+    unless  => "grep \"${database_host}:5432:${database_name}:${database_user}:${database_password}\" /root/.pgpass",
+    require => File['/root/.pgpass'],
   }
 
   postgresql::server::extension {'zabbix-timescaledb':
