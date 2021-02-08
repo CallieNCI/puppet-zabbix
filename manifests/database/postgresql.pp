@@ -124,21 +124,21 @@ class zabbix::database::postgresql (
         path     => "/bin:/usr/bin:/usr/local/sbin:/usr/local/bin:${database_path}",
         unless   => 'test -f /etc/zabbix/.schema.done',
         provider => 'shell',
-        require  => Postgresql_psql {'initialise-timescaledb'],
+        require  => Postgresql_psql['initialise-timescaledb'],
       }
       -> exec { 'zabbix_server_images.sql':
         command  => $zabbix_server_images_sql,
         path     => "/bin:/usr/bin:/usr/local/sbin:/usr/local/bin:${database_path}",
         unless   => 'test -f /etc/zabbix/.images.done',
         provider => 'shell',
-        require  => Postgresql_psql {'initialise-timescaledb'],
+        require  => Postgresql_psql['initialise-timescaledb'],
       }
       -> exec { 'zabbix_server_data.sql':
         command  => $zabbix_server_data_sql,
         path     => "/bin:/usr/bin:/usr/local/sbin:/usr/local/bin:${database_path}",
         unless   => 'test -f /etc/zabbix/.data.done',
         provider => 'shell',
-        require  => Postgresql_psql {'initialise-timescaledb'],
+        require  => Postgresql_psql['initialise-timescaledb'],
       }
     }
     default: {
