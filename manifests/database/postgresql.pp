@@ -115,7 +115,7 @@ class zabbix::database::postgresql (
         path     => "/bin:/usr/bin:/usr/local/sbin:/usr/local/bin:${database_path}",
         unless   => 'test -f /etc/zabbix/.schema.done',
         provider => 'shell',
-        require  => Postgresql_psql {'initialise-timescaledb'],
+        require  => Postgresql_psql['initialise-timescaledb'],
       }
     }
     'server': {
