@@ -292,10 +292,12 @@ class zabbix::server (
   }
 
   if versioncmp($zabbix_version, '5.4') >= 0 {
-    package { 'zabbix-sql-scripts':
-      ensure  => present,
-      require => Class['zabbix::repo'],
-      tag     => 'zabbix',
+    if $facts['os']['family'] != 'Ubuntu' or versioncmp($facts['os']['release']['major'], '22.04') != 0 or versioncmp($zabbix_version, '6.0') < 0 {
+      package { 'zabbix-sql-scripts':
+        ensure  => present,
+        require => Class['zabbix::repo'],
+        tag     => 'zabbix',
+      }
     }
   }
 
